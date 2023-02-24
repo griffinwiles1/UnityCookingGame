@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml.Serialization;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -17,6 +18,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
     [SerializeField] private PlayerInput playerInput;
     [SerializeField] private LayerMask countersLayerMask;
     [SerializeField] private Transform kitchenObjectHoldPoint;
+    [SerializeField] private Transform playerInteractPoint;
 
     private bool isWalking;
     private Vector3 lastInteractDir;
@@ -36,12 +38,16 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
     }
 
     private void PlayerInput_OnInteractAlternateAction(object sender, EventArgs e) {
+        //if (!CookingGameManager.Instance.IsGamePlaying()) return;
+        
         if (selectedCounter != null) {
             selectedCounter.InteractAlternate(this);
         }
     }
 
     private void PlayerInput_OnInteractAction(object sender, System.EventArgs e) {
+        //if (!CookingGameManager.Instance.IsGamePlaying()) return;
+        
         if (selectedCounter != null) {
             selectedCounter.Interact(this);
         }
@@ -59,9 +65,10 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
         if (moveDir != Vector3.zero) {
             lastInteractDir = moveDir;
         }
-
-        float interactDistance = 2f;
-        if (Physics.Raycast(transform.position, lastInteractDir, out RaycastHit raycastHit, interactDistance, countersLayerMask)) {
+        
+        float interactDistance = 1.5f;
+        if (Physics.Raycast(playerInteractPoint.position, lastInteractDir, out RaycastHit raycastHit, interactDistance, countersLayerMask)) {
+            
             if (raycastHit.transform.TryGetComponent(out BaseCounter baseCounter)) {
                 // Has ClearCounter
                 if (baseCounter != selectedCounter) {
@@ -74,6 +81,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
             SetSelectedCounter(null);
         }
     }
+    //List.SortByDistanceFrom( this.transform );
 
     private void SetSelectedCounter(BaseCounter selectedCounter) {
         this.selectedCounter = selectedCounter;
@@ -87,6 +95,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
     private void HandleMovement() {
         Vector2 inputVector = playerInput.GetMovementVectorNormalized();
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
+        Vector3 moveDirRot = moveDir;
 
         float moveDistance = moveSpeed * Time.deltaTime;
         float playerRadius = .7f;
@@ -126,8 +135,9 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
 
         isWalking = moveDir != Vector3.zero;
 
-        float rotateSpeed = 10f;
-        transform.forward = Vector3.Slerp(transform.forward, moveDir, rotateSpeed * Time.deltaTime);
+        // Rotation
+        float rotateSpeed = 6f;
+        transform.forward = Vector3.Slerp(transform.forward, moveDirRot, rotateSpeed * Time.deltaTime);
     }
 
     public bool IsWalking() {

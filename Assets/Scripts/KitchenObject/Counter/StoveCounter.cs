@@ -100,7 +100,7 @@ public class StoveCounter : BaseCounter, IHasProgress {
             if (player.HasKitchenObject()) {
                 // Player is carrying a KitchenObject
                 if (HasRecipeWithInput(player.GetKitchenObject().GetKitchenObjectSO())) {
-                    // KitchenObject is part of a CuttingRecipeSO.input
+                    // KitchenObject is part of a FryingRecipeSO.input
                     player.GetKitchenObject().SetKitchenObjectParent(this);
 
                     fryingRecipeSO = GetFryingRecipeSOWithInput(GetKitchenObject().GetKitchenObjectSO());
@@ -115,6 +115,11 @@ public class StoveCounter : BaseCounter, IHasProgress {
                     OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs {
                         progressNormalized = fryingTimer / fryingRecipeSO.fryingTimerMax
                     });
+                } else {
+                    // KitchenObject can't be Fried
+                    player.GetKitchenObject().SetKitchenObjectParent(this);
+
+                    state = State.Idle;
                 }
             } else {
                 // Player not carrying a KitchenObject
@@ -123,6 +128,23 @@ public class StoveCounter : BaseCounter, IHasProgress {
             // There is a KitchenObject here
             if (player.HasKitchenObject()) {
                 // Player is carrying a KitchenObject
+                if (player.GetKitchenObject().TryGetPlate(out PlateKitchenObject plateKitchenObject)) {
+                    // Player is holding a plate
+                    if (plateKitchenObject.TryAddIngredient(GetKitchenObject().GetKitchenObjectSO())) {
+                        GetKitchenObject().DestroySelf();
+
+                        state = State.Idle;
+
+                        OnStateChanged?.Invoke(this, new OnStateChangedEventArgs {
+                            state = state
+                        });
+
+
+                        OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs {
+                            progressNormalized = 0f
+                        });
+                    }
+                }
             } else {
                 // Player not carrying a KitchenObject
                 GetKitchenObject().SetKitchenObjectParent(player);
@@ -136,7 +158,7 @@ public class StoveCounter : BaseCounter, IHasProgress {
 
                 OnProgressChanged?.Invoke(this, new IHasProgress.OnProgressChangedEventArgs {
                     progressNormalized = 0f
-                }); ;
+                });
             }
         }
     }

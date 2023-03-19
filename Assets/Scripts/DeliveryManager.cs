@@ -26,17 +26,22 @@ public class DeliveryManager : MonoBehaviour {
     }
 
     private void Update() {
-        spawnRecipeTimer -= Time.deltaTime;
-        if (spawnRecipeTimer <= 0f) {
-            spawnRecipeTimer = spawnRecipeTimerMax;
+        if (CookingGameManager.Instance.IsGamePlaying()) {
+            spawnRecipeTimer -= Time.deltaTime;
+            if (spawnRecipeTimer <= 0f) {
+                spawnRecipeTimer = spawnRecipeTimerMax;
 
-            if (waitingRecipeSOList.Count < waitingRecipesMax) {
-                RecipeSO waitingRecipeSO = recipeListSO.recipeSOList[UnityEngine.Random.Range(0, recipeListSO.recipeSOList.Count)];
+                if (waitingRecipeSOList.Count < waitingRecipesMax) {
+                    RecipeSO waitingRecipeSO = recipeListSO.recipeSOList[UnityEngine.Random.Range(0, recipeListSO.recipeSOList.Count)];
 
-                waitingRecipeSOList.Add(waitingRecipeSO);
+                    waitingRecipeSOList.Add(waitingRecipeSO);
 
-                OnRecipeSpawned?.Invoke(this, EventArgs.Empty);
+                    OnRecipeSpawned?.Invoke(this, EventArgs.Empty);
+                }
             }
+        } else if (CookingGameManager.Instance.IsGamePrepping()) {
+            waitingRecipeSOList.Clear();
+            OnRecipeSpawned?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -67,7 +72,7 @@ public class DeliveryManager : MonoBehaviour {
                     // Player delivered the correct Recipe
                     Debug.Log("Player delivered the correct recipe!");
                     waitingRecipeSOList.RemoveAt(i);
-                    // TODO give the Player $$$
+                    // TODO give the Player $$$ plus Rep
                     OnRecipeCompleted?.Invoke(this, EventArgs.Empty);
                     return;
                 }

@@ -38,5 +38,4 @@ public class DeliveryManagerUI : MonoBehaviour {
             recipeTransform.GetComponent<DeliveryManagerSingleUI>().SetRecipeSO(recipeSO);
         }
     }
-
 }

@@ -5,9 +5,11 @@ using UnityEngine;
 
 public class GridPlacementSystem : MonoBehaviour {
 
-    [SerializeField] private Transform counterPrefab;
+    [SerializeField] private CounterSO placedCounterSO;
     [SerializeField] private Transform playerInteractPoint;
+    
     private GridXZ<GridObject> grid;
+    private CounterSO.Dir dir = CounterSO.Dir.Down;
 
     private void Awake() {
 
@@ -50,18 +52,49 @@ public class GridPlacementSystem : MonoBehaviour {
     }
 
     private void Update() {
-        if (Input.GetMouseButtonDown(0)) {
+        if (Input.GetKeyDown(KeyCode.P)) {
             grid.GetXZ(playerInteractPoint.position, out int x, out int z);
 
-            GridObject gridObject = grid.GetGridObject(x, z);
-            if (gridObject.CanBuild()) {
-                Transform builtTransform = Instantiate(counterPrefab, grid.GetWorldPosition(x, z), Quaternion.identity);
-                gridObject.SetTransform(builtTransform);
+            List<Vector2Int> gridPositionList = placedCounterSO.GetGridPositionList(new Vector2Int(x, z), CounterSO.Dir.Down); 
+
+            // Test can build
+            bool canBuild = true;
+            foreach (Vector2Int gridPosition in gridPositionList) {
+                if (!grid.GetGridObject(gridPosition.x, gridPosition.y).CanBuild()) {
+                    canBuild = false;
+                    break;
+                }
+            }
+            
+            if (canBuild) {
+                Vector2Int rotationOffset = placedCounterSO.GetRotationOffset(dir);
+                Vector3 placedCounterSOWorldPosition = grid.GetWorldPosition(x, z) +
+                    new Vector3(rotationOffset.x, 0, rotationOffset.y) * grid.GetCellSize();
+
+                Transform builtTransform = 
+                    Instantiate(
+                        placedCounterSO.prefab,
+                        placedCounterSOWorldPosition, 
+                        Quaternion.Euler(0, placedCounterSO.GetRotationAngle(dir), 0)
+                    );
+                
+                foreach (Vector2Int gridPosition in gridPositionList) {
+                    grid.GetGridObject(gridPosition.x, gridPosition.y).SetTransform(builtTransform);
+                }
             } else {
                 // TODO - Swap with what's there
                 Debug.Log("Already somethin here m8");
             }
             
         }
+
+        if (Input.GetKeyDown(KeyCode.R)) {
+            dir = CounterSO.GetNextDir(dir);
+            Debug.Log(dir);
+        }
     }
+
+
+    //TODO 
+
 }

@@ -8,56 +8,70 @@ public class CookingGameManager : MonoBehaviour {
 
     private enum State {
         Closed,
-        Preparation,
-        DayCountdown,
-        Day,
-        DayOver,
+        OpenCountdown,
+        Open,
+        BackoutCountdown,
     }
 
     private State state;
-    private float preparationTimer = 1f;
-    private float gameCountdownTimer = 3f;
-    private float gamePlayingTimer = 10f;
+    private float gameCountdownTimer;
+    private float gamePlayingTimer = 30f;
 
     private void Awake() {
         Instance = this;
 
-        state = State.Preparation;
+        state = State.Closed;
     }
 
     private void Update() {
         switch (state) {
-            case State.Preparation: 
-                preparationTimer -= Time.deltaTime;
-                if (preparationTimer < 0f) {
-                    state = State.DayCountdown; 
+            case State.Closed:
+                gameCountdownTimer = 5f;
+                if (Input.GetKeyDown(KeyCode.Q)) {
+                    state = State.OpenCountdown; 
                 }
                 break;
 
-            case State.DayCountdown:
+            case State.OpenCountdown:
                 gameCountdownTimer -= Time.deltaTime;
+                Debug.Log(gameCountdownTimer);
                 if (gameCountdownTimer < 0f) {
-                    state = State.Day;
+                    state = State.Open;
+                }
+                if (Input.GetKeyDown(KeyCode.Q)) {
+                    state = State.Closed;
                 }
                 break;
 
-            case State.Day:
+            case State.Open:
+                gameCountdownTimer = 5f;
                 gamePlayingTimer -= Time.deltaTime;
+                if (gamePlayingTimer > 20f && Input.GetKeyDown(KeyCode.Q)) {
+                    state = State.BackoutCountdown;
+                }
                 if (gamePlayingTimer < 0f) {
-                    state = State.DayOver;
+                    state = State.Closed;
                 }
                 break;
 
-            case State.DayOver:
+            case State.BackoutCountdown:
+                gameCountdownTimer -= Time.deltaTime;
+                Debug.Log(gameCountdownTimer);
+                if (gameCountdownTimer < 0f) {
+                    state = State.Closed;
+                }
+                if (Input.GetKeyDown(KeyCode.Q)) {
+                    state = State.Open;
+                }
                 break;
         }
     }
 
     public bool IsGamePrepping() {
-        return state == State.Preparation;
+        return (state == State.Closed);
     }
 
     public bool IsGamePlaying() {
-        return state == State.Day;
+        return state == State.Open;
     }
 }

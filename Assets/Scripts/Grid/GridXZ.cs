@@ -37,7 +37,7 @@ public class GridXZ<TGridObject> {
 
         gridArray = new TGridObject[width, height];
 
-        bool showDebug = true;
+        bool showDebug = false;
         if (showDebug) {
             TextMesh[,] debugTextArray = new TextMesh[width, height];
 

@@ -19,6 +19,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
     [SerializeField] private LayerMask countersLayerMask;
     [SerializeField] private Transform kitchenObjectHoldPoint;
     [SerializeField] private Transform playerInteractPoint;
+    [SerializeField] private Transform playerHiddenCounter;
 
     private bool isWalking;
     private Vector3 lastInteractDir;
@@ -38,10 +39,13 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
     }
 
     private void PlayerInput_OnInteractAlternateAction(object sender, EventArgs e) {
-        //if (!CookingGameManager.Instance.IsGamePlaying()) return;
-        
         if (selectedCounter != null) {
-            selectedCounter.InteractAlternate(this);
+            if (CookingGameManager.Instance.IsGamePrepping()) {
+                // Rotate Selected Counter Visual using GridPlacementSystem
+
+            } else if (CookingGameManager.Instance.IsGamePlaying()) {
+                selectedCounter.InteractAlternate(this);
+            }
         }
     }
 
@@ -101,6 +105,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
         float playerRadius = .7f;
         float playerHeight = 2f;
 
+        // TODO - Take a look at redoing this to handle corners better
         bool canMove = !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDir, moveDistance);
 
         if (!canMove) {
@@ -162,5 +167,9 @@ public class Player : MonoBehaviour, IKitchenObjectParent {
 
     public bool HasKitchenObject() {
         return kitchenObject != null;
+    }
+
+    public BaseCounter GetPlayerHiddenCounter() {
+        return playerHiddenCounter.GetComponent<BaseCounter>();
     }
 }
